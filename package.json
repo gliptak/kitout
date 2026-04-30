@@ -1,0 +1,17 @@
+{
+  "name": "kitout",
+  "version": "0.1.0",
+  "type": "module",
+  "main": ".opencode/plugins/kitout.js",
+  "description": "Dynamic skill loader plugin for OpenCode — loads SKILL.md skills from configured git repos at session startup",
+  "license": "MIT",
+  "scripts": {
+    "check": "node --check .opencode/plugins/kitout.js",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "node --test test/**/*.test.js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13"
+  }
+}

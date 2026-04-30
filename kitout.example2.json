@@ -1,0 +1,12 @@
+{
+  "repos": [
+    {
+      "url": "https://github.com/obra/superpowers",
+      "skills": [{ "skill": "test-driven-development" }]
+    },
+    {
+      "url": "https://github.com/sickn33/antigravity-awesome-skills",
+      "skills": [{ "skill": "context-driven-development" }]
+    }
+  ]
+}
