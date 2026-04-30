@@ -1,5 +1,9 @@
 # kitout
 
+[![CI](https://github.com/gliptak/kitout/actions/workflows/ci.yml/badge.svg)](https://github.com/gliptak/kitout/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node 22+](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](package.json)
+
 A dynamic skill loader for OpenCode. Configure a list of git repos and kitout clones them at session startup, registering their skills with OpenCode's native skill discovery.
 
 ## MVP: OpenCode plugin
