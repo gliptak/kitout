@@ -1,7 +1,10 @@
 {
+  "$schema": "./kitout.schema.json",
+  "version": "1",
   "repos": [
     {
       "url": "https://github.com/obra/superpowers",
+      "ref": "v2.0.0",
       "skills": [{ "skill": "test-driven-development" }]
     },
     {

@@ -9,6 +9,7 @@
     "ignoreUnknown": true,
     "includes": [
       ".opencode/**/*.js",
+      ".plugin/**/*.js",
       "test/**/*.js",
       "*.json",
       "!node_modules",

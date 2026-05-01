@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/gliptak/kitout/main/kitout.schema.json",
+  "title": "kitout configuration",
+  "description": "Configuration for kitout — dynamic skill loader for AI coding harnesses",
+  "type": "object",
+  "required": ["version", "repos"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "enum": ["1"],
+      "description": "Config format version. Currently must be \"1\"."
+    },
+    "repos": {
+      "type": "array",
+      "description": "Git repositories to load skills from",
+      "items": {
+        "$ref": "#/definitions/repo"
+      }
+    }
+  },
+  "definitions": {
+    "repo": {
+      "type": "object",
+      "required": ["url"],
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Git repository URL (HTTPS or SSH). Only add repos you trust — their SKILL.md content is injected directly into AI context.",
+          "examples": [
+            "https://github.com/obra/superpowers",
+            "git@github.com:obra/superpowers.git"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "description": "Git ref to pin the repo to: branch name, tag, or full commit SHA. Omit to always use the default branch HEAD.",
+          "examples": [
+            "main",
+            "v2.0.0",
+            "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+          ]
+        },
+        "skills": {
+          "type": "array",
+          "description": "Specific skills to load from this repo. Omit to load all skills.",
+          "items": {
+            "$ref": "#/definitions/skillEntry"
+          }
+        }
+      }
+    },
+    "skillEntry": {
+      "type": "object",
+      "required": ["skill"],
+      "additionalProperties": false,
+      "properties": {
+        "skill": {
+          "type": "string",
+          "description": "Name of the skill directory within the repo's skills/ folder",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "examples": ["test-driven-development", "code-review"]
+        }
+      }
+    }
+  }
+}

@@ -2,9 +2,20 @@
  * kitout plugin for OpenCode
  *
  * Loads SKILL.md skills from git repos configured in:
- *   - .opencode/kitout.json                                (project scope)
- *   - $OPENCODE_CONFIG_DIR/kitout.json  or               \
- *     $XDG_CONFIG_HOME/opencode/kitout.json               (global scope)
+ *   - .opencode/kitout.json    (project — OpenCode)
+ *   - .claude/kitout.json      (project — Claude Code / Copilot CLI)
+ *   - .agents/kitout.json      (project — agentskills / OpenCode)
+ *   - ~/.opencode/kitout.json  (global — OpenCode)
+ *   - ~/.claude/kitout.json    (global — Claude Code / Copilot CLI)
+ *   - ~/.agents/kitout.json    (global — agentskills / OpenCode)
+ *   - $OPENCODE_CONFIG_DIR/kitout.json  (global — OpenCode XDG compat)
+ *
+ * All config files are optional and merged additively (deduped by URL).
+ * For OpenCode this plugin registers all repos in-memory via config.skills.paths —
+ * project vs global scope is not distinguished here because OpenCode handles
+ * skill discovery natively. For symlink-based harnesses (Copilot CLI, Claude Code)
+ * see .plugin/sync.js, which keeps project and global repos separate so skills
+ * are written to the correct scope directory.
  *
  * Repos are shallow-cloned/pulled to:
  *   $XDG_CACHE_HOME/kitout/repos/<host>/<org>/<repo>
@@ -14,13 +25,16 @@
  *
  * Config format (both files use the same schema):
  *   {
+ *     "version": "1",
  *     "repos": [
  *       { "url": "https://github.com/obra/superpowers" },
  *       { "url": "https://github.com/org/skills",
+ *         "ref": "v2.0.0",
  *         "skills": [{ "skill": "tdd" }, { "skill": "code-review" }] }
  *     ]
  *   }
  *
+ * "ref" pins the repo to a branch, tag, or commit SHA (optional; defaults to HEAD).
  * Omitting "skills" loads all skills from that repo.
  * No config files present = NOOP.
  */
@@ -99,14 +113,22 @@ function run(cmd, args) {
 
 /**
  * Ensure a repo is cloned and up-to-date at cachePath.
+ * If ref is provided, pin to that branch, tag, or SHA.
  * On network failure, falls back to the stale cache if it exists.
  * Returns the cache path, or null if unavailable.
  */
-function ensureRepo(url, cachePath) {
+function ensureRepo(url, cachePath, ref) {
   try {
     if (!fs.existsSync(cachePath)) {
       fs.mkdirSync(path.dirname(cachePath), { recursive: true })
       run('git', ['clone', '--depth', '1', '--', url, cachePath])
+      if (ref) {
+        run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin', ref])
+        run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
+      }
+    } else if (ref) {
+      run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin', ref])
+      run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
     } else {
       run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin'])
       run('git', ['-C', cachePath, 'reset', '--hard', 'origin/HEAD'])
@@ -184,23 +206,50 @@ function resolveSkillPaths(repoPath, skillsFilter) {
 export const KitoutPlugin = async ({ directory }) => {
   const cacheBase = path.join(xdgCacheDir(), 'kitout', 'repos')
 
-  // Global config lives alongside OpenCode's own config, respecting OPENCODE_CONFIG_DIR
+  // Global config dir (XDG compat for OpenCode)
   const opencodeConfigDir =
     process.env.OPENCODE_CONFIG_DIR || path.join(xdgConfigDir(), 'opencode')
 
-  const projectConfig = readConfig(
+  const home = os.homedir()
+
+  const projectConfigOpenCode = readConfig(
     path.join(directory, '.opencode', 'kitout.json'),
   )
-  const globalConfig = readConfig(path.join(opencodeConfigDir, 'kitout.json'))
+  const projectConfigClaude = readConfig(
+    path.join(directory, '.claude', 'kitout.json'),
+  )
+  const projectConfigAgents = readConfig(
+    path.join(directory, '.agents', 'kitout.json'),
+  )
+  const globalConfigXdg = readConfig(
+    path.join(opencodeConfigDir, 'kitout.json'),
+  )
+  const globalConfigOpenCode = readConfig(
+    path.join(home, '.opencode', 'kitout.json'),
+  )
+  const globalConfigClaude = readConfig(
+    path.join(home, '.claude', 'kitout.json'),
+  )
+  const globalConfigAgents = readConfig(
+    path.join(home, '.agents', 'kitout.json'),
+  )
 
-  const repos = mergeRepos(projectConfig, globalConfig)
+  const repos = mergeRepos(
+    projectConfigOpenCode,
+    projectConfigClaude,
+    projectConfigAgents,
+    globalConfigXdg,
+    globalConfigOpenCode,
+    globalConfigClaude,
+    globalConfigAgents,
+  )
   if (repos.length === 0) return {} // NOOP — no config files or no repos listed
 
   // Clone / pull all repos eagerly so paths are ready before the config hook runs
   const skillsPaths = []
   for (const repo of repos) {
     const cachePath = urlToCachePath(repo.url, cacheBase)
-    const resolved = ensureRepo(repo.url, cachePath)
+    const resolved = ensureRepo(repo.url, cachePath, repo.ref)
     if (resolved) {
       for (const p of resolveSkillPaths(resolved, repo.skills)) {
         skillsPaths.push(p)
@@ -228,4 +277,10 @@ export const KitoutPlugin = async ({ directory }) => {
 // ---------------------------------------------------------------------------
 // Exported helpers — used by tests; not part of the OpenCode plugin API
 // ---------------------------------------------------------------------------
-export { indexSkills, mergeRepos, resolveSkillPaths, urlToCachePath }
+export {
+  ensureRepo,
+  indexSkills,
+  mergeRepos,
+  resolveSkillPaths,
+  urlToCachePath,
+}

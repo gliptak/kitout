@@ -1,0 +1,12 @@
+{
+  "name": "kitout",
+  "description": "Dynamic skill loader — clones configured git repos and symlinks their skills into .claude/skills/ and .agents/skills/ at session start",
+  "version": "0.1.0",
+  "author": {
+    "name": "Gábor Lipták"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/gliptak/kitout",
+  "homepage": "https://github.com/gliptak/kitout",
+  "keywords": ["skills", "kitout", "opencode", "copilot"]
+}

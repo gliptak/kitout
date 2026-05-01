@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/sync.js\"",
+        "powershell": "node \"${PLUGIN_ROOT}/sync.js\"",
+        "timeoutSec": 60
+      }
+    ]
+  }
+}
