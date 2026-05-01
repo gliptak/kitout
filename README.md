@@ -1,6 +1,6 @@
 # kitout
 
-[![CI](https://github.com/gliptak/kitout/actions/workflows/ci.yml/badge.svg)](https://github.com/gliptak/kitout/actions/workflows/ci.yml)
+[![CI](https://github.com/gliptak/kitout/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gliptak/kitout/actions/workflows/ci.yml?query=branch%3Amain++)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node 22+](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](package.json)
 
@@ -25,7 +25,7 @@ OpenCode clones the plugin repo automatically on first run — no manual `git cl
 
 ### Configure
 
-Create `.agents/kitout.json` in your project (and/or `$XDG_CONFIG_HOME/opencode/kitout.json` globally):
+Create `.opencode/kitout.json` in your project (and/or `$XDG_CONFIG_HOME/opencode/kitout.json` globally):
 
 ```json
 {
@@ -44,7 +44,7 @@ No config file = nothing loaded. Any git URL is supported (GitHub, GitLab, self-
 
 At each OpenCode session startup:
 
-1. Reads `.agents/kitout.json` (project) and `$XDG_CONFIG_HOME/opencode/kitout.json` (global) — both optional, repos merged
+1. Reads `.opencode/kitout.json` (project) and `$XDG_CONFIG_HOME/opencode/kitout.json` (global) — both optional, repos merged
 2. Shallow-clones each repo to `$XDG_CACHE_HOME/kitout/repos/<host>/<org>/<repo>` (or pulls if already cached)
 3. Registers the `skills/` directory of each repo with OpenCode's native `config.skills.paths`
 4. OpenCode discovers all `SKILL.md` files and makes them available in the session

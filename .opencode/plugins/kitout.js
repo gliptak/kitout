@@ -2,7 +2,7 @@
  * kitout plugin for OpenCode
  *
  * Loads SKILL.md skills from git repos configured in:
- *   - .agents/kitout.json                                  (project scope)
+ *   - .opencode/kitout.json                                (project scope)
  *   - $OPENCODE_CONFIG_DIR/kitout.json  or               \
  *     $XDG_CONFIG_HOME/opencode/kitout.json               (global scope)
  *
@@ -189,7 +189,7 @@ export const KitoutPlugin = async ({ directory }) => {
     process.env.OPENCODE_CONFIG_DIR || path.join(xdgConfigDir(), 'opencode')
 
   const projectConfig = readConfig(
-    path.join(directory, '.agents', 'kitout.json'),
+    path.join(directory, '.opencode', 'kitout.json'),
   )
   const globalConfig = readConfig(path.join(opencodeConfigDir, 'kitout.json'))
 
