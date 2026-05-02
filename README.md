@@ -96,14 +96,29 @@ Place `kitout.json` in any of these locations (all optional, merged additively):
 | Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` |
 | Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` |
 
-### How it works
+### Known issues — implementation blocked
 
-At each Copilot CLI session startup (via `SessionStart` hook):
+> ❌ **Plugin hooks do not fire in Copilot CLI.** Two open bugs block this integration:
+>
+> - [**#2540**](https://github.com/github/copilot-cli/issues/2540) — Plugin-defined `hooks.json` is silently ignored for all hook types (macOS, CLI 1.0.x, filed April 2026, open)
+> - [**#1730**](https://github.com/github/copilot-cli/issues/1730) — `sessionStart` does not fire from `.github/hooks/` either (filed Feb 2026, open)
+>
+> The plugin installs correctly and skills declared statically in `plugin.json` load fine, but the `sync.js` hook that clones repos and creates symlinks never runs. No configuration workaround exists — these are confirmed CLI bugs.
 
-1. Reads all config files listed above — all optional, repos deduplicated by URL
-2. Shallow-clones each repo to `~/.cache/kitout/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref)
-3. Symlinks each skill directory into `.agents/skills/` (project) or `~/.agents/skills/` (global)
-4. Copilot CLI auto-scans those directories for `SKILL.md` files
+**Manual workaround** until the bugs are fixed — run sync before starting a session:
+
+```bash
+node ~/.copilot/installed-plugins/kitout/kitout/sync.js
+```
+
+Or add a shell wrapper to your `~/.zshrc`:
+
+```zsh
+copilot() {
+  node ~/.copilot/installed-plugins/kitout/kitout/sync.js 2>/dev/null
+  command copilot "$@"
+}
+```
 
 ## Claude Code plugin
 
@@ -131,11 +146,11 @@ Place `kitout.json` in any of these locations (all optional, merged additively):
 
 ### How it works
 
-At each Claude Code session startup (via `SessionStart` hook):
+At each Claude Code session startup (via confirmed `SessionStart` hook):
 
 1. Reads all config files listed above — all optional, repos deduplicated by URL
 2. Shallow-clones each repo to `~/.cache/kitout/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref)
-3. Symlinks each skill directory into `.agents/skills/` (project) or `~/.agents/skills/` (global)
+3. Symlinks each skill directory into `.claude/skills/` and `.agents/skills/` (project) or `~/.claude/skills/` and `~/.agents/skills/` (global)
 4. Claude Code auto-scans those directories for `SKILL.md` files
 
 ## Requirements

@@ -1,0 +1,16 @@
+{
+  "description": "Run kitout sync at session start — clones configured repos and symlinks skills into .agents/skills/",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/sync.js\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

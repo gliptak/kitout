@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "kitout",
+  "owner": { "name": "Gábor Lipták" },
+  "metadata": {
+    "description": "kitout — dynamic skill loader for AI coding assistants",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "kitout",
+      "source": "./.plugin",
+      "description": "Dynamic skill loader — clones configured git repos and symlinks their skills into .agents/skills/ and .claude/skills/ at session start",
+      "version": "0.1.0",
+      "license": "MIT",
+      "repository": "https://github.com/gliptak/kitout",
+      "homepage": "https://github.com/gliptak/kitout",
+      "keywords": ["skills", "kitout", "opencode", "copilot"]
+    }
+  ]
+}

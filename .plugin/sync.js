@@ -238,15 +238,21 @@ function installRepoSkills(repo, skillRoots) {
 // Install
 // ---------------------------------------------------------------------------
 
-// Project-scoped: symlink into project's .agents/skills/
-const projectSkillRoots = [path.join(cwd, '.agents', 'skills')]
+// Project-scoped: symlink into project's .agents/skills/ and .claude/skills/
+const projectSkillRoots = [
+  path.join(cwd, '.agents', 'skills'),
+  path.join(cwd, '.claude', 'skills'),
+]
 
 for (const repo of projectRepos) {
   installRepoSkills(repo, projectSkillRoots)
 }
 
-// Global-scoped: symlink into ~/.agents/skills/
-const globalSkillRoots = [path.join(home, '.agents', 'skills')]
+// Global-scoped: symlink into ~/.agents/skills/ and ~/.claude/skills/
+const globalSkillRoots = [
+  path.join(home, '.agents', 'skills'),
+  path.join(home, '.claude', 'skills'),
+]
 
 for (const repo of globalRepos) {
   installRepoSkills(repo, globalSkillRoots)

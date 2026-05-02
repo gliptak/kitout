@@ -8,5 +8,6 @@
   "license": "MIT",
   "repository": "https://github.com/gliptak/kitout",
   "homepage": "https://github.com/gliptak/kitout",
-  "keywords": ["skills", "kitout", "opencode", "copilot"]
+  "keywords": ["skills", "kitout", "opencode", "copilot"],
+  "hooks": "./hooks.json"
 }
