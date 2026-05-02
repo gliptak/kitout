@@ -112,6 +112,26 @@ function run(cmd, args) {
 }
 
 /**
+ * Fetch a specific ref from origin, trying short name, refs/tags/, and refs/heads/.
+ * Shallow fetches don't always resolve short tag names, so we try all forms.
+ */
+function fetchRef(cachePath, ref) {
+  const candidates = [ref, `refs/tags/${ref}`, `refs/heads/${ref}`]
+  for (const candidate of candidates) {
+    const result = spawnSync(
+      'git',
+      ['-C', cachePath, 'fetch', '--depth', '1', 'origin', candidate],
+      { stdio: 'pipe' },
+    )
+    if (result.status === 0) {
+      run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
+      return
+    }
+  }
+  throw new Error(`could not fetch ref "${ref}" from origin (tried as-is, refs/tags/, refs/heads/)`)
+}
+
+/**
  * Ensure a repo is cloned and up-to-date at cachePath.
  * If ref is provided, pin to that branch, tag, or SHA.
  * On network failure, falls back to the stale cache if it exists.
@@ -122,13 +142,9 @@ function ensureRepo(url, cachePath, ref) {
     if (!fs.existsSync(cachePath)) {
       fs.mkdirSync(path.dirname(cachePath), { recursive: true })
       run('git', ['clone', '--depth', '1', '--', url, cachePath])
-      if (ref) {
-        run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin', ref])
-        run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
-      }
+      if (ref) fetchRef(cachePath, ref)
     } else if (ref) {
-      run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin', ref])
-      run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
+      fetchRef(cachePath, ref)
     } else {
       run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin'])
       run('git', ['-C', cachePath, 'reset', '--hard', 'origin/HEAD'])
@@ -284,3 +300,5 @@ export {
   resolveSkillPaths,
   urlToCachePath,
 }
+
+export default KitoutPlugin

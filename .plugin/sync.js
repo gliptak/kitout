@@ -68,18 +68,33 @@ function run(cmd, args) {
   }
 }
 
+function fetchRef(cachePath, ref) {
+  // Try the ref as-is first (works for SHAs and some branch/tag names),
+  // then fall back to explicit refs/tags/ and refs/heads/ to handle tags
+  // that git servers don't advertise under short names in shallow fetches.
+  const candidates = [ref, `refs/tags/${ref}`, `refs/heads/${ref}`]
+  for (const candidate of candidates) {
+    const result = spawnSync(
+      'git',
+      ['-C', cachePath, 'fetch', '--depth', '1', 'origin', candidate],
+      { stdio: 'pipe' },
+    )
+    if (result.status === 0) {
+      run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
+      return
+    }
+  }
+  throw new Error(`could not fetch ref "${ref}" from origin (tried as-is, refs/tags/, refs/heads/)`)
+}
+
 function ensureRepo(url, cachePath, ref) {
   try {
     if (!fs.existsSync(cachePath)) {
       fs.mkdirSync(path.dirname(cachePath), { recursive: true })
       run('git', ['clone', '--depth', '1', '--', url, cachePath])
-      if (ref) {
-        run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin', ref])
-        run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
-      }
+      if (ref) fetchRef(cachePath, ref)
     } else if (ref) {
-      run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin', ref])
-      run('git', ['-C', cachePath, 'checkout', 'FETCH_HEAD'])
+      fetchRef(cachePath, ref)
     } else {
       run('git', ['-C', cachePath, 'fetch', '--depth', '1', 'origin'])
       run('git', ['-C', cachePath, 'reset', '--hard', 'origin/HEAD'])
@@ -221,16 +236,41 @@ function symlinkSkill(srcDir, targetParentDir) {
 
 /**
  * Install skills from a repo into the given harness skill roots.
+ * Adds the installed skill names to expectedNames for later reconciliation.
  */
-function installRepoSkills(repo, skillRoots) {
+function installRepoSkills(repo, skillRoots, expectedNames) {
   const cachePath = urlToCachePath(repo.url, cacheBase)
   const resolved = ensureRepo(repo.url, cachePath, repo.ref)
   if (!resolved) return
 
   for (const skillPath of resolveSkillPaths(resolved, repo.skills)) {
+    expectedNames.add(path.basename(skillPath))
     for (const root of skillRoots) {
       symlinkSkill(skillPath, root)
     }
+  }
+}
+
+/**
+ * Remove any kitout-managed symlinks in skillRoot that are not in expectedNames.
+ * Only symlinks whose target is under cacheBase are considered kitout-managed.
+ * Real directories and symlinks created by other tools are never touched.
+ */
+function reconcileSkillRoot(skillRoot, expectedNames) {
+  if (!fs.existsSync(skillRoot)) return
+  for (const entry of fs.readdirSync(skillRoot, { withFileTypes: true })) {
+    if (!entry.isSymbolicLink()) continue
+    if (expectedNames.has(entry.name)) continue
+    const linkPath = path.join(skillRoot, entry.name)
+    let target
+    try {
+      target = fs.readlinkSync(linkPath)
+    } catch {
+      continue
+    }
+    if (!target.startsWith(cacheBase)) continue // not kitout-managed, leave it alone
+    fs.unlinkSync(linkPath)
+    console.warn(`kitout: removed stale symlink ${linkPath}`)
   }
 }
 
@@ -244,8 +284,12 @@ const projectSkillRoots = [
   path.join(cwd, '.claude', 'skills'),
 ]
 
+const projectExpected = new Set()
 for (const repo of projectRepos) {
-  installRepoSkills(repo, projectSkillRoots)
+  installRepoSkills(repo, projectSkillRoots, projectExpected)
+}
+for (const root of projectSkillRoots) {
+  reconcileSkillRoot(root, projectExpected)
 }
 
 // Global-scoped: symlink into ~/.agents/skills/ and ~/.claude/skills/
@@ -254,6 +298,10 @@ const globalSkillRoots = [
   path.join(home, '.claude', 'skills'),
 ]
 
+const globalExpected = new Set()
 for (const repo of globalRepos) {
-  installRepoSkills(repo, globalSkillRoots)
+  installRepoSkills(repo, globalSkillRoots, globalExpected)
+}
+for (const root of globalSkillRoots) {
+  reconcileSkillRoot(root, globalExpected)
 }
