@@ -5,9 +5,11 @@
  *   - .opencode/kitout.json    (project — OpenCode)
  *   - .claude/kitout.json      (project — Claude Code / Copilot CLI)
  *   - .agents/kitout.json      (project — agentskills / OpenCode)
+ *   - .pi/agent/kitout.json      (project — Pi)
  *   - ~/.opencode/kitout.json  (global — OpenCode)
  *   - ~/.claude/kitout.json    (global — Claude Code / Copilot CLI)
  *   - ~/.agents/kitout.json    (global — agentskills / OpenCode)
+ *   - ~/.pi/agent/kitout.json    (global — Pi)
  *   - $OPENCODE_CONFIG_DIR/kitout.json  (global — OpenCode XDG compat)
  *
  * All config files are optional and merged additively (deduped by URL).
@@ -239,6 +241,9 @@ export const KitoutPlugin = async ({ directory }) => {
   const projectConfigAgents = readConfig(
     path.join(directory, '.agents', 'kitout.json'),
   )
+  const projectConfigPi = readConfig(
+    path.join(directory, '.pi', 'agent', 'kitout.json'),
+  )
   const globalConfigXdg = readConfig(
     path.join(opencodeConfigDir, 'kitout.json'),
   )
@@ -251,15 +256,20 @@ export const KitoutPlugin = async ({ directory }) => {
   const globalConfigAgents = readConfig(
     path.join(home, '.agents', 'kitout.json'),
   )
+  const globalConfigPi = readConfig(
+    path.join(home, '.pi', 'agent', 'kitout.json'),
+  )
 
   const repos = mergeRepos(
     projectConfigOpenCode,
     projectConfigClaude,
     projectConfigAgents,
+    projectConfigPi,
     globalConfigXdg,
     globalConfigOpenCode,
     globalConfigClaude,
     globalConfigAgents,
+    globalConfigPi,
   )
   if (repos.length === 0) return {} // NOOP — no config files or no repos listed
 
