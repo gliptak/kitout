@@ -3,7 +3,7 @@
  * kitout sync script — Copilot CLI SessionStart hook
  *
  * Reads kitout config, clones/pulls repos, and symlinks skill directories
- * into both .claude/skills/ and .agents/skills/ (project and user scope).
+ * into harness-specific skill directories (project and user scope).
  *
  * Config is read from (all optional, merged additively):
  *   <cwd>/.opencode/kitout.json   (project — OpenCode)
@@ -14,16 +14,12 @@
  *   ~/.agents/kitout.json         (global — agentskills / OpenCode)
  *
  * Project and global repos are kept separate: project repos are symlinked into
- * the project's skill dirs (<cwd>/.claude/skills/, <cwd>/.agents/skills/) and
- * global repos are symlinked into the home skill dirs (~/.claude/skills/,
- * ~/.agents/skills/). This ensures repos configured at home scope are written to
- * home, and repos configured at project scope are written to the project.
+ * the project's harness skill dirs and global repos into the home harness skill
+ * dirs. This ensures repos configured at home scope are written to home, and
+ * repos configured at project scope are written to the project.
  *
- * Skills are symlinked to (project repos):
- *   <cwd>/.agents/skills/<name>/
- *
- * Skills are symlinked to (global repos):
- *   ~/.agents/skills/<name>/
+ * Skills are symlinked to harness skill directories (project or home scope).
+ * See the install section below for the current list of harness targets.
  *
  * Existing symlinks are refreshed; real dirs (user-managed) are skipped with a warning.
  */
@@ -89,7 +85,7 @@ function fetchRef(cachePath, ref) {
   )
 }
 
-function ensureRepo(url, cachePath, ref) {
+function ensureRepo(url, cachePath, ref, sourceFile) {
   try {
     if (!fs.existsSync(cachePath)) {
       fs.mkdirSync(path.dirname(cachePath), { recursive: true })
@@ -103,13 +99,14 @@ function ensureRepo(url, cachePath, ref) {
     }
     return cachePath
   } catch (e) {
+    const location = sourceFile ? ` (from ${sourceFile})` : ''
     if (fs.existsSync(cachePath)) {
       console.warn(
-        `kitout: failed to sync ${url} (using cached copy): ${e.message}`,
+        `kitout: failed to sync ${url}${location} (using cached copy): ${e.message}`,
       )
       return cachePath
     }
-    console.warn(`kitout: failed to clone ${url}: ${e.message}`)
+    console.warn(`kitout: failed to clone ${url}${location}: ${e.message}`)
     return null
   }
 }
@@ -172,7 +169,14 @@ const cacheBase = path.join(
 function readConfig(filePath) {
   try {
     if (!fs.existsSync(filePath)) return null
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'))
+    const config = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+    // Tag each repo with its source config file
+    if (config?.repos) {
+      for (const repo of config.repos) {
+        repo.sourceFile = filePath
+      }
+    }
+    return config
   } catch (e) {
     console.warn(`kitout: failed to read ${filePath}: ${e.message}`)
     return null
@@ -244,7 +248,7 @@ function symlinkSkill(srcDir, targetParentDir) {
  */
 function installRepoSkills(repo, skillRoots, expectedNames) {
   const cachePath = urlToCachePath(repo.url, cacheBase)
-  const resolved = ensureRepo(repo.url, cachePath, repo.ref)
+  const resolved = ensureRepo(repo.url, cachePath, repo.ref, repo.sourceFile)
   if (!resolved) return
 
   for (const skillPath of resolveSkillPaths(resolved, repo.skills)) {
@@ -282,10 +286,11 @@ function reconcileSkillRoot(skillRoot, expectedNames) {
 // Install
 // ---------------------------------------------------------------------------
 
-// Project-scoped: symlink into project's .agents/skills/ and .claude/skills/
+// Project-scoped: symlink into project's .agents/skills/, .claude/skills/, and .pi/skills/
 const projectSkillRoots = [
   path.join(cwd, '.agents', 'skills'),
   path.join(cwd, '.claude', 'skills'),
+  path.join(cwd, '.pi', 'skills'),
 ]
 
 const projectExpected = new Set()
@@ -296,10 +301,11 @@ for (const root of projectSkillRoots) {
   reconcileSkillRoot(root, projectExpected)
 }
 
-// Global-scoped: symlink into ~/.agents/skills/ and ~/.claude/skills/
+// Global-scoped: symlink into ~/.agents/skills/, ~/.claude/skills/, and ~/.pi/agent/skills/
 const globalSkillRoots = [
   path.join(home, '.agents', 'skills'),
   path.join(home, '.claude', 'skills'),
+  path.join(home, '.pi', 'agent', 'skills'),
 ]
 
 const globalExpected = new Set()
@@ -309,3 +315,8 @@ for (const repo of globalRepos) {
 for (const root of globalSkillRoots) {
   reconcileSkillRoot(root, globalExpected)
 }
+
+// ---------------------------------------------------------------------------
+// Exported helpers — used by tests; not part of the CLI runtime
+// ---------------------------------------------------------------------------
+export { globalSkillRoots, projectSkillRoots, readConfig }

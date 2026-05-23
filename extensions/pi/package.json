@@ -1,0 +1,12 @@
+{
+  "name": "@kitout/pi-extension",
+  "version": "0.1.0",
+  "description": "kitout plugin for Pi — syncs skills on session start",
+  "type": "module",
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.75.5"
+  },
+  "pi": {
+    "extension": true
+  }
+}

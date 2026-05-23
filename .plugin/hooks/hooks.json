@@ -1,5 +1,5 @@
 {
-  "description": "Run kitout sync at session start — clones configured repos and symlinks skills into .agents/skills/",
+  "description": "Run kitout sync at session start — clones configured repos and symlinks skills into harness-specific skill directories",
   "hooks": {
     "SessionStart": [
       {
