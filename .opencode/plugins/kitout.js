@@ -128,7 +128,9 @@ function fetchRef(cachePath, ref) {
       return
     }
   }
-  throw new Error(`could not fetch ref "${ref}" from origin (tried as-is, refs/tags/, refs/heads/)`)
+  throw new Error(
+    `could not fetch ref "${ref}" from origin (tried as-is, refs/tags/, refs/heads/)`,
+  )
 }
 
 /**
