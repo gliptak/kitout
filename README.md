@@ -60,8 +60,8 @@ Place `kitout.json` in any of these locations (all are optional and merged addit
 
 | Scope | Paths checked |
 |-------|---------------|
-| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` |
-| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` · `$XDG_CONFIG_HOME/opencode/kitout.json` |
+| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` · `.pi/agent/kitout.json` |
+| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` · `~/.pi/agent/kitout.json` · `$XDG_CONFIG_HOME/opencode/kitout.json` |
 
 ### How it works
 
@@ -93,8 +93,8 @@ Place `kitout.json` in any of these locations (all optional, merged additively):
 
 | Scope | Paths checked |
 |-------|---------------|
-| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` |
-| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` |
+| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` · `.pi/agent/kitout.json` |
+| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` · `~/.pi/agent/kitout.json` |
 
 ### Known issues — implementation blocked
 
@@ -141,8 +141,8 @@ Place `kitout.json` in any of these locations (all optional, merged additively):
 
 | Scope | Paths checked |
 |-------|---------------|
-| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` |
-| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` |
+| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` · `.pi/agent/kitout.json` |
+| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` · `~/.pi/agent/kitout.json` |
 
 ### How it works
 
