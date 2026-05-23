@@ -84,7 +84,9 @@ function fetchRef(cachePath, ref) {
       return
     }
   }
-  throw new Error(`could not fetch ref "${ref}" from origin (tried as-is, refs/tags/, refs/heads/)`)
+  throw new Error(
+    `could not fetch ref "${ref}" from origin (tried as-is, refs/tags/, refs/heads/)`,
+  )
 }
 
 function ensureRepo(url, cachePath, ref) {
@@ -102,7 +104,9 @@ function ensureRepo(url, cachePath, ref) {
     return cachePath
   } catch (e) {
     if (fs.existsSync(cachePath)) {
-      console.warn(`kitout: failed to sync ${url} (using cached copy): ${e.message}`)
+      console.warn(
+        `kitout: failed to sync ${url} (using cached copy): ${e.message}`,
+      )
       return cachePath
     }
     console.warn(`kitout: failed to clone ${url}: ${e.message}`)
