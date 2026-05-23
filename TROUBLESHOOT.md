@@ -76,6 +76,43 @@ Each configured repo appears as `~/.cache/kitout/repos/<host>/<org>/<name>/`.
 
 ---
 
+## Pi
+
+**Note:** On first install, skills appear after restarting Pi. The extension runs `sync.js` on `session_start` which creates the symlinks, but Pi may scan for skills before the extension fires. On subsequent sessions the skills are already in place from the previous run.
+
+**Check that the Pi extension is active:**
+```bash
+pi extension list
+```
+Look for `@kitout/pi-extension` in the list.
+
+**Check that skill symlinks were created:**
+```bash
+ls -la .pi/skills/              # project-scoped skills
+ls -la ~/.pi/agent/skills/      # global skills
+```
+Kitout-managed entries appear as symlinks (`->`) pointing into `~/.cache/kitout/repos/`.
+
+**Run sync manually:**
+```bash
+node .plugin/sync.js
+```
+Run from your project directory so project-scoped config is found.
+
+**Or trigger sync from within Pi:**
+```
+/kitout
+```
+The `/kitout` command runs the same sync and reports results.
+
+**Check the repo cache:**
+```bash
+ls ~/.cache/kitout/repos/
+```
+Each configured repo appears as `~/.cache/kitout/repos/<host>/<org>/<name>/`.
+
+---
+
 ## Copilot CLI
 
 ### Known limitation: plugin hooks do not fire

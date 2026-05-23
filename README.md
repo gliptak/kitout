@@ -6,7 +6,7 @@
 
 A dynamic skill loader for AI coding harnesses. Configure a list of git repos and kitout clones them at session startup, registering their `SKILL.md` skills with the active harness.
 
-**Supported harnesses:** OpenCode · GitHub Copilot CLI · Claude Code
+**Supported harnesses:** OpenCode · GitHub Copilot CLI · Claude Code · Pi (plugin approach in progress)
 
 > ⚠️ **Security — context injection:** Skills are injected directly into your AI session context. Only add repos you have personally reviewed and trust. Use `ref` to pin repos to a specific tag or commit SHA so unexpected upstream changes cannot affect your session.
 

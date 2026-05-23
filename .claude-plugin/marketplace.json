@@ -10,7 +10,7 @@
     {
       "name": "kitout",
       "source": "./.plugin",
-      "description": "Dynamic skill loader — clones configured git repos and symlinks their skills into .agents/skills/ and .claude/skills/ at session start",
+      "description": "Dynamic skill loader — clones configured git repos and symlinks their skills into harness-specific skill directories at session start",
       "version": "0.1.0",
       "license": "MIT",
       "repository": "https://github.com/gliptak/kitout",
