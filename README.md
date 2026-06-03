@@ -12,7 +12,7 @@ A dynamic skill loader for AI coding harnesses. Configure a list of git repos an
 
 ## Config format
 
-Create `kitout.json` in `.opencode/`, `.claude/`, or `.agents/` (project) or under `~/` in any of the same dirs (global):
+Create `kitout.json` in your project root (project) or `~/.kitout/kitout.json` (global):
 
 ```json
 {
@@ -60,17 +60,15 @@ Place `kitout.json` in any of these locations (all are optional and merged addit
 
 | Scope | Paths checked |
 |-------|---------------|
-| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` · `.pi/agent/kitout.json` |
-| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` · `~/.pi/agent/kitout.json` · `$XDG_CONFIG_HOME/opencode/kitout.json` |
+| Project | `kitout.json` (in project root) |
+| Global | `~/.kitout/kitout.json` |
 
 ### How it works
 
-At each OpenCode session startup:
-
-1. Reads all config files listed above — all optional, repos deduplicated by URL across all sources
-2. Shallow-clones each repo to `$XDG_CACHE_HOME/kitout/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref if already cached)
-3. Registers the `skills/` directory of each repo with OpenCode's native `config.skills.paths`
-4. OpenCode discovers all `SKILL.md` files and makes them available in the session
+1. Reads the project kitout.json file (kitout.json in project directory)
+2. Reads the global kitout.json file (~/.kitout/kitout.json)
+3. Shallow-clones each repo to `~/.kitout/cache/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref if already cached)
+4. Registers the `skills/` directory of each repo with OpenCode's native `config.skills.paths`
 
 ## Copilot CLI plugin
 
@@ -93,8 +91,8 @@ Place `kitout.json` in any of these locations (all optional, merged additively):
 
 | Scope | Paths checked |
 |-------|---------------|
-| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` · `.pi/agent/kitout.json` |
-| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` · `~/.pi/agent/kitout.json` |
+| Project | `kitout.json` (in project root) |
+| Global | `~/.kitout/kitout.json` |
 
 ### Known issues — implementation blocked
 
@@ -141,15 +139,15 @@ Place `kitout.json` in any of these locations (all optional, merged additively):
 
 | Scope | Paths checked |
 |-------|---------------|
-| Project | `.opencode/kitout.json` · `.claude/kitout.json` · `.agents/kitout.json` · `.pi/agent/kitout.json` |
-| Global | `~/.opencode/kitout.json` · `~/.claude/kitout.json` · `~/.agents/kitout.json` · `~/.pi/agent/kitout.json` |
+ | Project | `kitout.json` (in project root) |
+ | Global | `~/.kitout/kitout.json` |
 
 ### How it works
 
 At each Claude Code session startup (via confirmed `SessionStart` hook):
 
 1. Reads all config files listed above — all optional, repos deduplicated by URL
-2. Shallow-clones each repo to `~/.cache/kitout/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref)
+2. Shallow-clones each repo to `~/.kitout/cache/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref)
 3. Symlinks each skill directory into `.claude/skills/` and `.agents/skills/` (project) or `~/.claude/skills/` and `~/.agents/skills/` (global)
 4. Claude Code auto-scans those directories for `SKILL.md` files
 
@@ -163,7 +161,7 @@ At each Claude Code session startup (via confirmed `SessionStart` hook):
 
 | Platform | Path |
 |----------|------|
-| Linux / macOS | `~/.cache/kitout/repos/` |
+| Linux / macOS | `~/.kitout/cache/repos/` |
 | Custom | Set `$XDG_CACHE_HOME` |
 
 ## Troubleshooting
