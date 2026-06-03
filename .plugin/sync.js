@@ -6,14 +6,8 @@
  * into harness-specific skill directories (project and user scope).
  *
  * Config is read from (all optional, merged additively):
- *   <cwd>/.opencode/kitout.json   (project — OpenCode)
- *   <cwd>/.claude/kitout.json     (project — Claude Code / Copilot CLI)
- *   <cwd>/.agents/kitout.json     (project — agentskills / OpenCode)
- *   <cwd>/.pi/agent/kitout.json     (project — Pi)
- *   ~/.opencode/kitout.json       (global — OpenCode)
- *   ~/.claude/kitout.json         (global — Claude Code / Copilot CLI)
- *   ~/.agents/kitout.json         (global — agentskills / OpenCode)
- *   ~/.pi/agent/kitout.json         (global — Pi)
+ *   <cwd>/kitout.json               (project — project root)
+ *   ~/.kitout/kitout.json            (global)
  *
  * Project and global repos are kept separate: project repos are symlinked into
  * the project's harness skill dirs and global repos into the home harness skill
@@ -158,11 +152,7 @@ function resolveSkillPaths(repoPath, skillsFilter) {
 
 const cwd = process.cwd()
 const home = os.homedir()
-const cacheBase = path.join(
-  process.env.XDG_CACHE_HOME || path.join(home, '.cache'),
-  'kitout',
-  'repos',
-)
+const cacheBase = path.join(home, '.kitout', 'cache', 'repos')
 
 // ---------------------------------------------------------------------------
 // Config loading
@@ -185,38 +175,14 @@ function readConfig(filePath) {
   }
 }
 
-const projectConfigOpenCode = readConfig(
-  path.join(cwd, '.opencode', 'kitout.json'),
-)
-const projectConfigClaude = readConfig(path.join(cwd, '.claude', 'kitout.json'))
-const projectConfigAgents = readConfig(path.join(cwd, '.agents', 'kitout.json'))
-const projectConfigPi = readConfig(
-  path.join(cwd, '.pi', 'agent', 'kitout.json'),
-)
-const globalConfigOpenCode = readConfig(
-  path.join(home, '.opencode', 'kitout.json'),
-)
-const globalConfigClaude = readConfig(path.join(home, '.claude', 'kitout.json'))
-const globalConfigAgents = readConfig(path.join(home, '.agents', 'kitout.json'))
-const globalConfigPi = readConfig(
-  path.join(home, '.pi', 'agent', 'kitout.json'),
-)
+const projectConfig = readConfig(path.join(cwd, 'kitout.json'))
+const globalConfig = readConfig(path.join(home, '.kitout', 'kitout.json'))
 
-// Project-scoped repos (from any project config file)
-const projectRepos = mergeRepos(
-  projectConfigOpenCode,
-  projectConfigClaude,
-  projectConfigAgents,
-  projectConfigPi,
-)
+// Project-scoped repos (from project config file)
+const projectRepos = mergeRepos(projectConfig)
 
-// Global-scoped repos (from any global config file)
-const globalRepos = mergeRepos(
-  globalConfigOpenCode,
-  globalConfigClaude,
-  globalConfigAgents,
-  globalConfigPi,
-)
+// Global-scoped repos (from global config file)
+const globalRepos = mergeRepos(globalConfig)
 
 if (projectRepos.length === 0 && globalRepos.length === 0) {
   process.exit(0) // NOOP — no config files or no repos listed

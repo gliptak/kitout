@@ -54,11 +54,11 @@ claude plugin list
 ls -la .claude/skills/          # project-scoped skills
 ls -la ~/.claude/skills/        # global skills
 ```
-Kitout-managed entries appear as symlinks (`->`) pointing into `~/.cache/kitout/repos/`.
+Kitout-managed entries appear as symlinks (`->`) pointing into `~/.kitout/cache/repos/`.
 
 **Run sync manually** (re-runs outside of Claude, useful when debugging):
 ```bash
-node ~/.claude/plugins/cache/kitout/*/sync.js
+node ~/.kitout/plugins/cache/kitout/*/sync.js
 ```
 Run from your project directory so project-scoped config is found.
 
@@ -70,9 +70,9 @@ Look for lines referencing `SessionStart` or `sync.js`.
 
 **Check the repo cache**:
 ```bash
-ls ~/.cache/kitout/repos/
+ls ~/.kitout/cache/repos/
 ```
-Each configured repo appears as `~/.cache/kitout/repos/<host>/<org>/<name>/`.
+Each configured repo appears as `~/.kitout/cache/repos/<host>/<org>/<name>/`.
 
 ---
 
@@ -91,7 +91,7 @@ Look for `@kitout/pi-extension` in the list.
 ls -la .pi/skills/              # project-scoped skills
 ls -la ~/.pi/agent/skills/      # global skills
 ```
-Kitout-managed entries appear as symlinks (`->`) pointing into `~/.cache/kitout/repos/`.
+Kitout-managed entries appear as symlinks (`->`) pointing into `~/.kitout/cache/repos/`.
 
 **Run sync manually:**
 ```bash
@@ -107,9 +107,9 @@ The `/kitout` command runs the same sync and reports results.
 
 **Check the repo cache:**
 ```bash
-ls ~/.cache/kitout/repos/
+ls ~/.kitout/cache/repos/
 ```
-Each configured repo appears as `~/.cache/kitout/repos/<host>/<org>/<name>/`.
+Each configured repo appears as `~/.kitout/cache/repos/<host>/<org>/<name>/`.
 
 ---
 
@@ -139,7 +139,7 @@ This runs `sync.js` before every Copilot session so skills are in place at start
 ```bash
 node ~/.copilot/installed-plugins/kitout/kitout/sync.js
 ```
-Run from your project directory so project-scoped config (`.agents/kitout.json` etc.) is found.
+Run from your project directory so project-scoped config (`kitout.json` in project root) is found.
 
 ---
 
@@ -148,7 +148,7 @@ Run from your project directory so project-scoped config (`.agents/kitout.json` 
 ls -la .agents/skills/          # project-scoped skills
 ls -la ~/.agents/skills/        # global skills
 ```
-Kitout-managed entries appear as symlinks (`->`) pointing into `~/.cache/kitout/repos/`.
+Kitout-managed entries appear as symlinks (`->`) pointing into `~/.kitout/cache/repos/`.
 
 **Inspect session logs** (each session writes a timestamped log):
 ```bash
@@ -158,6 +158,6 @@ tail ~/.copilot/logs/<latest>.log
 
 **Check the repo cache**:
 ```bash
-ls ~/.cache/kitout/repos/
+ls ~/.kitout/cache/repos/
 ```
-Each configured repo appears as `~/.cache/kitout/repos/<host>/<org>/<name>/`.
+Each configured repo appears as `~/.kitout/cache/repos/<host>/<org>/<name>/`.
