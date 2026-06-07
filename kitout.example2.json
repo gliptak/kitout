@@ -5,11 +5,16 @@
     {
       "url": "https://github.com/obra/superpowers",
       "ref": "v2.0.0",
-      "skills": [{ "skill": "test-driven-development" }]
+      "skills": [{ "path": "skills/test-driven-development" }]
     },
     {
       "url": "https://github.com/sickn33/antigravity-awesome-skills",
-      "skills": [{ "skill": "context-driven-development" }]
+      "skills": [
+        {
+          "path": "plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack"
+        },
+        { "path": "skills/react/typescript-component" }
+      ]
     }
   ]
 }
