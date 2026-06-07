@@ -84,7 +84,7 @@ describe('mergeRepos', () => {
   })
 
   it('preserves extra fields (e.g. skills filter)', () => {
-    const skills = [{ skill: 'tdd' }]
+    const skills = [{ path: 'skills/tdd' }]
     const cfg = { repos: [{ url: 'https://github.com/a/a', skills }] }
     assert.deepEqual(mergeRepos(cfg)[0].skills, skills)
   })
@@ -107,17 +107,17 @@ function makeSkillsTree(structure) {
 }
 
 describe('indexSkills', () => {
-  it('finds top-level skill dirs', () => {
+  it('finds top-level skill dirs keyed by relative path', () => {
     const root = makeSkillsTree({ tdd: true, 'code-review': true })
     const index = indexSkills(root)
     assert.ok(index.has('tdd'))
     assert.ok(index.has('code-review'))
   })
 
-  it('finds nested skill dirs', () => {
+  it('finds nested skill dirs keyed by relative path', () => {
     const root = makeSkillsTree({ 'python/tdd': true })
     const index = indexSkills(root)
-    assert.ok(index.has('tdd'))
+    assert.ok(index.has('python/tdd'))
   })
 
   it('ignores dirs without SKILL.md', () => {
@@ -143,23 +143,32 @@ describe('resolveSkillPaths', () => {
     assert.deepEqual(result, [skillsDir])
   })
 
-  it('returns specific skill dirs when filter given', () => {
-    const root = makeSkillsTree({ tdd: true, 'code-review': true })
-    const result = resolveSkillPaths(root, [{ skill: 'tdd' }])
+  it('returns specific skill dir when filter given as string path', () => {
+    const root = makeSkillsTree({
+      'skills/tdd': true,
+      'skills/code-review': true,
+    })
+    const result = resolveSkillPaths(root, [{ path: 'skills/tdd' }])
     assert.equal(result.length, 1)
-    assert.ok(result[0].endsWith('tdd'))
+    assert.ok(result[0].endsWith(path.join('skills', 'tdd')))
   })
 
-  it('skips unknown skill names (with warning)', () => {
-    const root = makeSkillsTree({ tdd: true })
-    const result = resolveSkillPaths(root, [{ skill: 'nonexistent' }])
+  it('skips unknown skill paths (with warning)', () => {
+    const root = makeSkillsTree({ 'skills/tdd': true })
+    const result = resolveSkillPaths(root, [{ path: 'skills/nonexistent' }])
     assert.deepEqual(result, [])
   })
 
   it('returns empty array for empty filter', () => {
-    const root = makeSkillsTree({ tdd: true })
-    // empty array filter → falls back to root (no filter)
+    const root = makeSkillsTree({ 'skills/tdd': true })
     const result = resolveSkillPaths(root, [])
-    assert.ok(result.length === 1)
+    assert.deepEqual(result, [findSkillsRoot(root)])
   })
 })
+
+// Not exported from kitout.js — define locally for test
+function findSkillsRoot(dir) {
+  return fs.existsSync(path.join(dir, 'skills'))
+    ? path.join(dir, 'skills')
+    : dir
+}

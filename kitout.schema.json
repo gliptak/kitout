@@ -49,7 +49,7 @@
         },
         "skills": {
           "type": "array",
-          "description": "Specific skills to load from this repo. Omit to load all skills.",
+          "description": "Specific skill paths to load from this repo, relative to repo root. Omit to load all skills.",
           "items": {
             "$ref": "#/definitions/skillEntry"
           }
@@ -58,14 +58,16 @@
     },
     "skillEntry": {
       "type": "object",
-      "required": ["skill"],
+      "required": ["path"],
       "additionalProperties": false,
       "properties": {
-        "skill": {
+        "path": {
           "type": "string",
-          "description": "Name of the skill directory within the repo's skills/ folder",
-          "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "examples": ["test-driven-development", "code-review"]
+          "description": "Path to a skill directory relative to the repo root",
+          "examples": [
+            "skills/test-driven-development",
+            "plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack"
+          ]
         }
       }
     }

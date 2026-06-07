@@ -6,10 +6,10 @@
   "description": "Dynamic skill loader plugin for OpenCode — loads SKILL.md skills from configured git repos at session startup",
   "license": "MIT",
   "scripts": {
-    "check": "node --check .opencode/plugins/kitout.js",
+    "check": "node --check .opencode/plugins/kitout.js && biome check .",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "node --test test/**/*.test.js"
+    "test": "biome check . && node --test test/**/*.test.js"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13"

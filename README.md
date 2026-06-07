@@ -21,18 +21,19 @@ Create `kitout.json` in your project root (project) or `~/.kitout/kitout.json` (
   "repos": [
     {
       "url": "https://github.com/obra/superpowers",
-      "ref": "v2.0.0"
+      "skills": ["skills/test-driven-development", "skills/code-review"]
     },
     {
-      "url": "https://github.com/my-org/my-skills",
-      "skills": [{ "skill": "code-review" }]
+      "url": "https://github.com/sickn33/antigravity-awesome-skills",
+      "ref": "main",
+      "skills": ["plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack"]
     }
   ]
 }
 ```
 
 - **`ref`** — pin to a branch, tag, or full commit SHA (recommended for security)
-- **`skills`** — select specific skills; omit to load all skills from the repo
+- **`skills`** — array of skill paths relative to repo root, e.g. `"skills/test-driven-development"`. Omit to load all skills from the repo.
 - No config file = nothing loaded
 
 See [`kitout.example1.json`](kitout.example1.json) and [`kitout.example2.json`](kitout.example2.json) for copy-paste starting points. Validate with [`kitout.schema.json`](kitout.schema.json).

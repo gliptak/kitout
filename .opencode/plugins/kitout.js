@@ -25,7 +25,7 @@
  *       { "url": "https://github.com/obra/superpowers" },
  *       { "url": "https://github.com/org/skills",
  *         "ref": "v2.0.0",
- *         "skills": [{ "skill": "tdd" }, { "skill": "code-review" }] }
+ *         "skills": [{"path": "skills/tdd"}, {"path": "skills/code-review"}] }
  *     ]
  *   }
  *
@@ -163,21 +163,23 @@ function findSkillsRoot(repoPath) {
  * Walk a directory tree recursively, collecting all dirs that contain SKILL.md.
  * Returns a map of skill-name → absolute-dir-path.
  */
-function indexSkills(dir, map = new Map()) {
+function indexSkills(dir, rootDir, map = new Map()) {
   if (!fs.existsSync(dir)) return map
+  rootDir ??= dir
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
     const child = path.join(dir, entry.name)
     if (fs.existsSync(path.join(child, 'SKILL.md'))) {
-      map.set(entry.name, child)
+      const key = path.relative(rootDir, child)
+      map.set(key, child)
     }
-    indexSkills(child, map)
+    indexSkills(child, rootDir, map)
   }
   return map
 }
 
 /**
- * Given a repo path and a skills filter array (e.g. [{skill:"tdd"}, ...]),
+ * Given a repo path and a skills filter array (e.g. ["skills/tdd", ...]),
  * return the list of skill directories to register.
  * Falls back to the whole skills root when no filter is provided.
  */
@@ -185,16 +187,15 @@ function resolveSkillPaths(repoPath, skillsFilter) {
   const root = findSkillsRoot(repoPath)
   if (!skillsFilter || skillsFilter.length === 0) return [root]
 
-  const index = indexSkills(root)
   const paths = []
   for (const entry of skillsFilter) {
-    const name = entry?.skill
-    if (!name) continue
-    const dir = index.get(name)
-    if (dir) {
+    const skillPath = entry?.path
+    if (!skillPath) continue
+    const dir = path.join(repoPath, skillPath)
+    if (fs.existsSync(path.join(dir, 'SKILL.md'))) {
       paths.push(dir)
     } else {
-      console.warn(`kitout: skill "${name}" not found in ${repoPath}`)
+      console.warn(`kitout: skill "${skillPath}" not found in ${repoPath}`)
     }
   }
   return paths

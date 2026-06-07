@@ -114,36 +114,19 @@ function findSkillsRoot(repoPath) {
     : repoPath
 }
 
-function indexSkills(dir, map = new Map()) {
+function indexSkills(dir, rootDir, map = new Map()) {
   if (!fs.existsSync(dir)) return map
+  rootDir ??= dir
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
     const child = path.join(dir, entry.name)
     if (fs.existsSync(path.join(child, 'SKILL.md'))) {
-      map.set(entry.name, child)
+      const key = path.relative(rootDir, child)
+      map.set(key, child)
     }
-    indexSkills(child, map)
+    indexSkills(child, rootDir, map)
   }
   return map
-}
-
-function resolveSkillPaths(repoPath, skillsFilter) {
-  const root = findSkillsRoot(repoPath)
-  if (!skillsFilter || skillsFilter.length === 0) return [root]
-
-  const index = indexSkills(root)
-  const paths = []
-  for (const entry of skillsFilter) {
-    const name = entry?.skill
-    if (!name) continue
-    const dir = index.get(name)
-    if (dir) {
-      paths.push(dir)
-    } else {
-      console.warn(`kitout: skill "${name}" not found in ${repoPath}`)
-    }
-  }
-  return paths
 }
 
 // ---------------------------------------------------------------------------
@@ -196,9 +179,8 @@ if (projectRepos.length === 0 && globalRepos.length === 0) {
  * Create or refresh a symlink at linkPath → srcDir.
  * Skips (with warning) if the path exists as a real directory (user-managed).
  */
-function symlinkSkill(srcDir, targetParentDir) {
-  const name = path.basename(srcDir)
-  const linkPath = path.join(targetParentDir, name)
+function symlinkSkill(srcDir, targetParentDir, linkRelPath) {
+  const linkPath = path.join(targetParentDir, linkRelPath)
 
   try {
     const stat = fs.lstatSync(linkPath)
@@ -214,7 +196,7 @@ function symlinkSkill(srcDir, targetParentDir) {
     // Path does not exist — will be created below
   }
 
-  fs.mkdirSync(targetParentDir, { recursive: true })
+  fs.mkdirSync(path.dirname(linkPath), { recursive: true })
   fs.symlinkSync(srcDir, linkPath)
 }
 
@@ -227,10 +209,34 @@ function installRepoSkills(repo, skillRoots, expectedNames) {
   const resolved = ensureRepo(repo.url, cachePath, repo.ref, repo.sourceFile)
   if (!resolved) return
 
-  for (const skillPath of resolveSkillPaths(resolved, repo.skills)) {
-    expectedNames.add(path.basename(skillPath))
+  const repoPrefix = path.relative(cacheBase, cachePath)
+  const skillPaths = []
+
+  if (repo.skills?.length) {
+    for (const entry of repo.skills) {
+      const skillPath = entry?.path
+      if (!skillPath) continue
+      const dir = path.join(resolved, skillPath)
+      if (fs.existsSync(path.join(dir, 'SKILL.md'))) {
+        skillPaths.push({ src: dir, rel: skillPath })
+      } else {
+        console.warn(`kitout: skill "${skillPath}" not found in ${resolved}`)
+      }
+    }
+  } else {
+    // Load all — discover all skill dirs individually
+    const root = findSkillsRoot(resolved)
+    const skills = indexSkills(root)
+    for (const [relPath, absPath] of skills) {
+      skillPaths.push({ src: absPath, rel: relPath })
+    }
+  }
+
+  for (const { src, rel } of skillPaths) {
+    const linkRel = path.join(repoPrefix, rel)
+    expectedNames.add(linkRel)
     for (const root of skillRoots) {
-      symlinkSkill(skillPath, root)
+      symlinkSkill(src, root, linkRel)
     }
   }
 }
@@ -242,17 +248,30 @@ function installRepoSkills(repo, skillRoots, expectedNames) {
  */
 function reconcileSkillRoot(skillRoot, expectedNames) {
   if (!fs.existsSync(skillRoot)) return
-  for (const entry of fs.readdirSync(skillRoot, { withFileTypes: true })) {
-    if (!entry.isSymbolicLink()) continue
-    if (expectedNames.has(entry.name)) continue
-    const linkPath = path.join(skillRoot, entry.name)
-    let target
-    try {
-      target = fs.readlinkSync(linkPath)
-    } catch {
-      continue
+  const toRemove = []
+
+  const walk = (dir, relPath) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const child = path.join(dir, entry.name)
+      const childRel = relPath ? path.join(relPath, entry.name) : entry.name
+      if (entry.isDirectory()) {
+        walk(child, childRel)
+      } else if (entry.isSymbolicLink()) {
+        if (expectedNames.has(childRel)) continue
+        let target
+        try {
+          target = fs.readlinkSync(child)
+        } catch {
+          continue
+        }
+        if (!target.startsWith(cacheBase)) continue // not kitout-managed
+        toRemove.push(child)
+      }
     }
-    if (!target.startsWith(cacheBase)) continue // not kitout-managed, leave it alone
+  }
+  walk(skillRoot, '')
+
+  for (const linkPath of toRemove) {
     fs.unlinkSync(linkPath)
     console.warn(`kitout: removed stale symlink ${linkPath}`)
   }
@@ -295,4 +314,13 @@ for (const root of globalSkillRoots) {
 // ---------------------------------------------------------------------------
 // Exported helpers — used by tests; not part of the CLI runtime
 // ---------------------------------------------------------------------------
-export { globalSkillRoots, projectSkillRoots, readConfig }
+export {
+  globalSkillRoots,
+  indexSkills,
+  installRepoSkills,
+  projectSkillRoots,
+  readConfig,
+  reconcileSkillRoot,
+  symlinkSkill,
+  urlToCachePath,
+}
