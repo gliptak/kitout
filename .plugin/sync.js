@@ -144,7 +144,11 @@ const cacheBase = path.join(home, '.kitout', 'cache', 'repos')
 function readConfig(filePath) {
   try {
     if (!fs.existsSync(filePath)) return null
-    const config = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+    const raw = fs
+      .readFileSync(filePath, 'utf8')
+      .replace(/\/\/.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+    const config = JSON.parse(raw)
     // Tag each repo with its source config file
     if (config?.repos) {
       for (const repo of config.repos) {

@@ -62,7 +62,11 @@ function urlToCachePath(url, cacheBase) {
 function readConfig(filePath) {
   try {
     if (!fs.existsSync(filePath)) return null
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'))
+    const raw = fs
+      .readFileSync(filePath, 'utf8')
+      .replace(/\/\/.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+    return JSON.parse(raw)
   } catch (e) {
     console.warn(`kitout: failed to read ${filePath}: ${e.message}`)
     return null

@@ -4,15 +4,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node 22+](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](package.json)
 
-A dynamic skill loader for AI coding harnesses. Configure a list of git repos and kitout clones them at session startup, registering their `SKILL.md` skills with the active harness.
+A config-driven skill loader for AI coding harnesses. Point it at a git repo with skills and kitout clones it, symlinks the skill directories into the right places, and the harness picks them up automatically.
 
-**Supported harnesses:** OpenCode · GitHub Copilot CLI · Claude Code · Pi (plugin approach in progress)
+**Supported harnesses:** OpenCode · Claude Code · GitHub Copilot CLI · Pi
 
-> ⚠️ **Security — context injection:** Skills are injected directly into your AI session context. Only add repos you have personally reviewed and trust. Use `ref` to pin repos to a specific tag or commit SHA so unexpected upstream changes cannot affect your session.
+> Security — context injection: Skills are injected directly into your AI session. Only add repos you have reviewed and trust. Pin with `ref` to freeze upstream changes.
 
-## Config format
+## Quick start
 
-Create `kitout.json` in your project root (project) or `~/.kitout/kitout.json` (global):
+Create `kitout.json` in your project root:
 
 ```json
 {
@@ -21,150 +21,91 @@ Create `kitout.json` in your project root (project) or `~/.kitout/kitout.json` (
   "repos": [
     {
       "url": "https://github.com/obra/superpowers",
-      "skills": ["skills/test-driven-development", "skills/code-review"]
-    },
-    {
-      "url": "https://github.com/sickn33/antigravity-awesome-skills",
-      "ref": "main",
-      "skills": ["plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack"]
+      "skills": [{ "path": "skills/test-driven-development" }]
     }
   ]
 }
 ```
 
-- **`ref`** — pin to a branch, tag, or full commit SHA (recommended for security)
-- **`skills`** — array of skill paths relative to repo root, e.g. `"skills/test-driven-development"`. Omit to load all skills from the repo.
-- No config file = nothing loaded
+Install the plugin for your harness (see below), then start a new session. Kitout clones the repo and registers the skill — no manual steps.
 
-See [`kitout.example1.json`](kitout.example1.json) and [`kitout.example2.json`](kitout.example2.json) for copy-paste starting points. Validate with [`kitout.schema.json`](kitout.schema.json).
+Omitting `skills` loads every skill it finds. Use `skills` to pick specific ones.
 
-## OpenCode plugin
+## Config format
 
-### Install
-
-Add kitout to your `opencode.json` (project) or `~/.config/opencode/opencode.json` (global):
+kitout reads from **project** (`./kitout.json`) and **global** (`~/.kitout/kitout.json`). Both are optional. If both exist, they merge additively (URLs deduplicated). If neither exists, or both have no `repos`, kitout does nothing — no repos are cloned, no skills are loaded, no stale symlinks are removed.
 
 ```json
 {
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "kitout@git+https://github.com/gliptak/kitout.git"
+  "$schema": "https://raw.githubusercontent.com/gliptak/kitout/main/kitout.schema.json",
+  "version": "1",
+  "repos": [
+    {
+      "url": "https://github.com/obra/superpowers",
+      "ref": "v2.0.0",
+      "skills": [{ "path": "skills/test-driven-development" }]
+    },
+    {
+      "url": "https://github.com/sickn33/antigravity-awesome-skills",
+      "skills": [
+        { "path": "plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack" },
+        { "path": "skills/react/typescript-component" }
+      ]
+    }
   ]
 }
 ```
 
-OpenCode clones the plugin repo automatically on first run — no manual `git clone` needed.
+| Field | Description |
+|-------|-------------|
+| `url` | Git repo URL (HTTPS or SSH) |
+| `ref` | Branch, tag, or commit SHA to pin (omit for default branch HEAD) |
+| `skills` | Array of `{path: "..."}` objects, paths relative to repo root. Omit to load all skills. |
 
-### Configure
+### Skill paths
 
-Place `kitout.json` in any of these locations (all are optional and merged additively):
+Skills are identified by their full path relative to the repo root. This avoids name collisions between repos and naturally supports nested skill layouts:
 
-| Scope | Paths checked |
-|-------|---------------|
-| Project | `kitout.json` (in project root) |
-| Global | `~/.kitout/kitout.json` |
+| Repo | Skill path |
+|------|------------|
+| obra/superpowers | `skills/test-driven-development` |
+| sickn33/antigravity-awesome-skills | `plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack` |
 
-### How it works
+See [`kitout.example1.json`](kitout.example1.json) and [`kitout.example2.json`](kitout.example2.json) for starting points. Validate with [`kitout.schema.json`](kitout.schema.json).
 
-1. Reads the project kitout.json file (kitout.json in project directory)
-2. Reads the global kitout.json file (~/.kitout/kitout.json)
-3. Shallow-clones each repo to `~/.kitout/cache/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref if already cached)
-4. Registers the `skills/` directory of each repo with OpenCode's native `config.skills.paths`
+## How skills are loaded
 
-## Copilot CLI plugin
+Kitout clones each repo to `~/.kitout/cache/repos/<host>/<org>/<repo>` (shallow clone, pinned at `ref`). It then creates symlinks in the harness skill directories that include the cache path as a prefix, preventing name collisions:
 
-### Install
-
-```bash
-copilot plugin marketplace add gliptak/kitout
-copilot plugin install kitout@kitout
+```
+.claude/skills/
+  github.com/
+    obra/
+      superpowers/
+        skills/
+          test-driven-development/  → ~/.kitout/cache/.../superpowers/skills/tdd
 ```
 
-Or from a local clone (development):
+The harness discovers `SKILL.md` files by scanning the skill directory recursively — no manual registration needed.
 
-```bash
-copilot plugin install ./path/to/kitout
-```
+## Install by harness
 
-### Configure
-
-Place `kitout.json` in any of these locations (all optional, merged additively):
-
-| Scope | Paths checked |
-|-------|---------------|
-| Project | `kitout.json` (in project root) |
-| Global | `~/.kitout/kitout.json` |
-
-### Known issues — implementation blocked
-
-> ❌ **Plugin hooks do not fire in Copilot CLI.** Two open bugs block this integration:
->
-> - [**#2540**](https://github.com/github/copilot-cli/issues/2540) — Plugin-defined `hooks.json` is silently ignored for all hook types (macOS, CLI 1.0.x, filed April 2026, open)
-> - [**#1730**](https://github.com/github/copilot-cli/issues/1730) — `sessionStart` does not fire from `.github/hooks/` either (filed Feb 2026, open)
->
-> The plugin installs correctly and skills declared statically in `plugin.json` load fine, but the `sync.js` hook that clones repos and creates symlinks never runs. No configuration workaround exists — these are confirmed CLI bugs.
-
-**Manual workaround** until the bugs are fixed — run sync before starting a session:
-
-```bash
-node ~/.copilot/installed-plugins/kitout/kitout/sync.js
-```
-
-Or add a shell wrapper to your `~/.zshrc`:
-
-```zsh
-copilot() {
-  node ~/.copilot/installed-plugins/kitout/kitout/sync.js 2>/dev/null
-  command copilot "$@"
-}
-```
-
-## Claude Code plugin
-
-### Install
-
-```bash
-claude plugin marketplace add gliptak/kitout
-claude plugin install kitout@kitout
-```
-
-Or from a local clone (development):
-
-```bash
-claude plugin install ./path/to/kitout
-```
-
-### Configure
-
-Place `kitout.json` in any of these locations (all optional, merged additively):
-
-| Scope | Paths checked |
-|-------|---------------|
- | Project | `kitout.json` (in project root) |
- | Global | `~/.kitout/kitout.json` |
-
-### How it works
-
-At each Claude Code session startup (via confirmed `SessionStart` hook):
-
-1. Reads all config files listed above — all optional, repos deduplicated by URL
-2. Shallow-clones each repo to `~/.kitout/cache/repos/<host>/<org>/<repo>` (or pulls/checks out pinned ref)
-3. Symlinks each skill directory into `.claude/skills/` and `.agents/skills/` (project) or `~/.claude/skills/` and `~/.agents/skills/` (global)
-4. Claude Code auto-scans those directories for `SKILL.md` files
+| Harness | Install command | Notes |
+|---------|----------------|-------|
+| **OpenCode** | Add to `opencode.json`: `"plugin": ["kitout@git+https://github.com/gliptak/kitout.git"]` | Auto-cloned on first run. Pushes to `config.skills.paths`. |
+| **Claude Code** | `claude plugin marketplace add gliptak/kitout && claude plugin install kitout@kitout` | Symlinks skill dirs on `SessionStart` hook. |
+| **Copilot CLI** | `copilot plugin marketplace add gliptak/kitout && copilot plugin install kitout@kitout` | Plugin hooks are blocked by [#2540](https://github.com/github/copilot-cli/issues/2540) + [#1730](https://github.com/github/copilot-cli/issues/1730). Manual workaround: `node ~/.copilot/installed-plugins/kitout/kitout/sync.js` before each session. |
+| **Pi** | Installed via `extensions/pi/index.ts` (bundled). | Runs `sync.js` on `session_start`. Registers `/kitout` command for manual sync. |
 
 ## Requirements
 
 - `git` on `$PATH`
 - Node.js 22+
-- Supported harness: OpenCode, GitHub Copilot CLI, or Claude Code
+- Supported agent harness
 
-## Cache location
+## Cache
 
-| Platform | Path |
-|----------|------|
-| Linux / macOS | `~/.kitout/cache/repos/` |
-| Custom | Set `$XDG_CACHE_HOME` |
-
+Cache is at `~/.kitout/cache/repos/`.
 ## Troubleshooting
 
 See [TROUBLESHOOT.md](TROUBLESHOOT.md) for debugging steps covering OpenCode and Copilot CLI.
