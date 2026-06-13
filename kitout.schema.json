@@ -35,6 +35,7 @@
           "description": "Git repository URL (HTTPS or SSH). Only add repos you trust — their SKILL.md content is injected directly into AI context.",
           "examples": [
             "https://github.com/obra/superpowers",
+            "https://github.com/EveryInc/compound-engineering-plugin",
             "git@github.com:obra/superpowers.git"
           ]
         },
@@ -66,7 +67,8 @@
           "description": "Path to a skill directory relative to the repo root",
           "examples": [
             "skills/test-driven-development",
-            "plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack"
+            "plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack",
+            "plugins/compound-engineering/skills/ce-plan"
           ]
         }
       }

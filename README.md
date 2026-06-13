@@ -51,6 +51,13 @@ kitout reads from **project** (`./kitout.json`) and **global** (`~/.kitout/kitou
         { "path": "plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack" },
         { "path": "skills/react/typescript-component" }
       ]
+    },
+    {
+      "url": "https://github.com/EveryInc/compound-engineering-plugin",
+      "skills": [
+        { "path": "plugins/compound-engineering/skills/ce-plan" },
+        { "path": "plugins/compound-engineering/skills/ce-code-review" }
+      ]
     }
   ]
 }
@@ -70,6 +77,7 @@ Skills are identified by their full path relative to the repo root. This avoids 
 |------|------------|
 | obra/superpowers | `skills/test-driven-development` |
 | sickn33/antigravity-awesome-skills | `plugins/antigravity-bundle-full-stack-developer/skills/senior-fullstack` |
+| EveryInc/compound-engineering-plugin | `plugins/compound-engineering/skills/ce-plan` |
 
 See [`kitout.example1.json`](kitout.example1.json) and [`kitout.example2.json`](kitout.example2.json) for starting points. Validate with [`kitout.schema.json`](kitout.schema.json).
 

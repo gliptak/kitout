@@ -15,6 +15,13 @@
         },
         { "path": "skills/react/typescript-component" }
       ]
+    },
+    {
+      "url": "https://github.com/EveryInc/compound-engineering-plugin",
+      "skills": [
+        { "path": "plugins/compound-engineering/skills/ce-plan" },
+        { "path": "plugins/compound-engineering/skills/ce-code-review" }
+      ]
     }
   ]
 }
