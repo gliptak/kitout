@@ -4,7 +4,7 @@
   "description": "kitout plugin for Pi — syncs skills on session start",
   "type": "module",
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.84.0"
+    "@earendil-works/pi-coding-agent": "^0.85.0"
   },
   "pi": {
     "extension": true
