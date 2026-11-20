@@ -6,11 +6,14 @@
 
 import path from 'node:path'
 import { spawn } from 'node:child_process'
-import type { ExtensionAPI } from '@earendil-works/pi-coding-agent'
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from '@earendil-works/pi-coding-agent'
 
 export default function (pi: ExtensionAPI) {
   // Helper to run sync.js
-  async function runSync(): Promise<boolean> {
+  async function runSync(ctx: ExtensionContext): Promise<boolean> {
     try {
       // Locate sync.js relative to this extension.
       // When installed from the kitout repo, the extension is at
@@ -31,14 +34,15 @@ export default function (pi: ExtensionAPI) {
       })
       return true
     } catch (e) {
-      pi.ui.notify(`kitout sync failed: ${e.message}`, 'error')
+      const message = e instanceof Error ? e.message : String(e)
+      ctx.ui.notify(`kitout sync failed: ${message}`, 'error')
       return false
     }
   }
 
   // Run sync when a session starts
   pi.on('session_start', async (_event, ctx) => {
-    const ok = await runSync()
+    const ok = await runSync(ctx)
     if (ok) ctx.ui.notify('kitout skills synced', 'info')
   })
 
@@ -46,7 +50,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand('kitout', {
     description: 'Run kitout sync to update skills',
     handler: async (_args, ctx) => {
-      const ok = await runSync()
+      const ok = await runSync(ctx)
       if (ok) ctx.ui.notify('kitout sync complete', 'info')
     },
   })

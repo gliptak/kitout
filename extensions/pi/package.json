@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "description": "kitout plugin for Pi — syncs skills on session start",
   "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit --strict --skipLibCheck --module NodeNext --moduleResolution NodeNext --target ES2022 index.ts"
+  },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.84.0"
+    "@earendil-works/pi-coding-agent": "^1.0.0",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
   },
   "pi": {
     "extension": true
